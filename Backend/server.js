@@ -14,14 +14,16 @@ const authorizeRoles = require("./middleware/roleMiddleware");
 
 const app = express();
 
+// Middleware
 app.use(cors());
 app.use(express.json());
 
+// Home Route
 app.get("/", (req, res) => {
     res.send("Nexora University Backend is Running!");
 });
 
-// Test database connection
+// Test Database Connection
 app.get("/api/test-db", (req, res) => {
     db.query("SELECT 1", (err) => {
         if (err) {
@@ -37,11 +39,12 @@ app.get("/api/test-db", (req, res) => {
     });
 });
 
-// Application routes
+// Application Routes
 app.use("/api/admissions", admissionRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 
+// Student Profile Route
 app.get(
     "/api/student/profile",
     verifyToken,
@@ -54,6 +57,7 @@ app.get(
     }
 );
 
+// Start Server
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, "0.0.0.0", () => {
