@@ -1,28 +1,10 @@
 
-let users = JSON.parse(localStorage.getItem("users")) || [
-    {
-        name: "Demo Student",
-        email: "student@nexora.com",
-        password: "student123"
-    }
-];
+// Backend URL
+const API_URL = "https://nexora-admission-backend.onrender.com";
 
-let applications =
-    JSON.parse(localStorage.getItem("applications")) || [];
-
-const admin = {
-    email: "admin@nexora.com",
-    password: "admin123"
-};
+let applications = [];
 
 const $ = id => document.getElementById(id);
-
-
-// Save browser data
-function save() {
-    localStorage.setItem("users", JSON.stringify(users));
-    localStorage.setItem("applications", JSON.stringify(applications));
-}
 
 
 // Login Modal
@@ -41,7 +23,7 @@ function openLogin(type) {
         $("loginIcon").textContent = "🛡️";
         $("tabs").classList.add("hidden");
         $("demo").textContent =
-            "Admin: admin@nexora.com / admin123";
+            "Use your administrator account.";
     } else {
         $("loginTitle").textContent = "Student Login";
         $("loginText").textContent =
@@ -49,22 +31,25 @@ function openLogin(type) {
         $("loginIcon").textContent = "👨‍🎓";
         $("tabs").classList.remove("hidden");
         $("demo").textContent =
-            "Student: student@nexora.com / student123";
+            "Register a new account or use your student account.";
     }
 }
 
 
+// Close Login Modal
 function closeLogin() {
     $("loginModal").style.display = "none";
 }
 
 
+// Show Login Form
 function showLogin() {
     $("loginForm").classList.remove("hidden");
     $("registerForm").classList.add("hidden");
 }
 
 
+// Show Registration Form
 function showRegister() {
     $("loginForm").classList.add("hidden");
     $("registerForm").classList.remove("hidden");
@@ -81,15 +66,15 @@ $("loginForm").onsubmit = async function(e) {
 
     try {
         const response = await fetch(
-            "http://localhost:5000/api/auth/login",
+            `${API_URL}/api/auth/login`,
             {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    email: email,
-                    password: password
+                    email,
+                    password
                 })
             }
         );
@@ -99,6 +84,12 @@ $("loginForm").onsubmit = async function(e) {
         if (!response.ok) {
             $("loginMessage").textContent =
                 result.message || "Login failed.";
+            return;
+        }
+
+        if (!result.token || !result.user) {
+            $("loginMessage").textContent =
+                "Invalid server response.";
             return;
         }
 
@@ -115,16 +106,19 @@ $("loginForm").onsubmit = async function(e) {
             return;
         }
 
-        // Save token and user details
+        // Save login details
         localStorage.setItem("token", result.token);
-        localStorage.setItem("user", JSON.stringify(result.user));
+        localStorage.setItem(
+            "user",
+            JSON.stringify(result.user)
+        );
 
         closeLogin();
 
         if (result.user.role === "admin") {
-            adminDashboard();
+            await adminDashboard();
         } else {
-            studentDashboard();
+            await studentDashboard();
         }
 
     } catch (error) {
@@ -143,9 +137,21 @@ $("registerForm").onsubmit = async function(e) {
     const email = $("registerEmail").value.trim().toLowerCase();
     const password = $("registerPassword").value;
 
+    if (!name || !email || !password) {
+        $("loginMessage").textContent =
+            "Please fill all required fields.";
+        return;
+    }
+
+    if (password.length < 8) {
+        $("loginMessage").textContent =
+            "Password must contain at least 8 characters.";
+        return;
+    }
+
     try {
         const response = await fetch(
-            "http://localhost:5000/api/auth/register",
+            `${API_URL}/api/auth/register`,
             {
                 method: "POST",
                 headers: {
@@ -171,7 +177,6 @@ $("registerForm").onsubmit = async function(e) {
             "Registration successful! Please login.";
 
         $("registerForm").reset();
-
         showLogin();
 
     } catch (error) {
@@ -183,8 +188,7 @@ $("registerForm").onsubmit = async function(e) {
 };
 
 
-// Student Dashboard - Get Latest Status from MySQL
-
+// Student Dashboard
 async function studentDashboard() {
     const token = localStorage.getItem("token");
     const user = JSON.parse(localStorage.getItem("user"));
@@ -197,15 +201,18 @@ async function studentDashboard() {
     $("studentArea").classList.remove("hidden");
     $("adminArea").classList.add("hidden");
 
-    const studentName = user.full_name || user.name || user.email;
+    const studentName =
+        user.full_name || user.name || user.email;
 
-    $("studentWelcome").textContent = `Welcome, ${studentName}`;
+    $("studentWelcome").textContent =
+        `Welcome, ${studentName}`;
+
     $("studentAccount").textContent = studentName;
     $("studentEmail").value = user.email;
 
     try {
         const response = await fetch(
-            "http://localhost:5000/api/admissions/student/me",
+            `${API_URL}/api/admissions/student/me`,
             {
                 method: "GET",
                 headers: {
@@ -217,10 +224,12 @@ async function studentDashboard() {
         const row = await response.json();
 
         if (!response.ok) {
-            throw new Error(row.message || "Could not load application.");
+            throw new Error(
+                row.message || "Could not load application."
+            );
         }
 
-        if (!row) {
+        if (!row || !row.id) {
             $("studentStatus").textContent = "Not Applied";
             $("appId").textContent = "-";
             $("appCourse").textContent = "-";
@@ -229,30 +238,35 @@ async function studentDashboard() {
             return;
         }
 
-        $("studentStatus").textContent = row.application_status;
+        $("studentStatus").textContent =
+            row.application_status;
+
         $("appId").textContent = row.id;
         $("appCourse").textContent = row.course;
         $("appMode").textContent = row.study_mode;
-        $("appStatus").textContent = row.application_status;
+        $("appStatus").textContent =
+            row.application_status;
 
     } catch (error) {
         console.error("Student dashboard error:", error);
 
-        $("studentStatus").textContent = "Unable to load status";
+        $("studentStatus").textContent =
+            "Unable to load status";
+
         $("formMessage").textContent = error.message;
     }
 }
 
-    
 
-// Submit Admission Form to MySQL
+// Submit Admission Form
 $("admissionForm").onsubmit = async function(e) {
     e.preventDefault();
 
     const token = localStorage.getItem("token");
 
     if (!token) {
-        $("formMessage").textContent = "Please login first.";
+        $("formMessage").textContent =
+            "Please login first.";
         return;
     }
 
@@ -265,7 +279,7 @@ $("admissionForm").onsubmit = async function(e) {
 
     try {
         const response = await fetch(
-            "http://localhost:5000/api/admissions",
+            `${API_URL}/api/admissions`,
             {
                 method: "POST",
                 headers: {
@@ -275,7 +289,7 @@ $("admissionForm").onsubmit = async function(e) {
                 body: JSON.stringify({
                     full_name: fullName,
                     phone: $("phone").value,
-                    course: course,
+                    course,
                     study_mode: mode
                 })
             }
@@ -285,7 +299,8 @@ $("admissionForm").onsubmit = async function(e) {
 
         if (!response.ok) {
             $("formMessage").textContent =
-                result.message || "Application submission failed.";
+                result.message ||
+                "Application submission failed.";
             return;
         }
 
@@ -311,11 +326,12 @@ function studentLogout() {
     localStorage.removeItem("user");
 
     $("studentArea").classList.add("hidden");
+
     window.scrollTo(0, 0);
 }
 
 
-// Admin Dashboard - Load Applications from MySQL
+// Admin Dashboard
 async function adminDashboard() {
     const token = localStorage.getItem("token");
     const user = JSON.parse(localStorage.getItem("user"));
@@ -330,7 +346,7 @@ async function adminDashboard() {
 
     try {
         const response = await fetch(
-            "http://localhost:5000/api/admissions",
+            `${API_URL}/api/admissions`,
             {
                 headers: {
                     "Authorization": `Bearer ${token}`
@@ -341,7 +357,9 @@ async function adminDashboard() {
         const rows = await response.json();
 
         if (!response.ok) {
-            throw new Error(rows.message || "Could not load applications.");
+            throw new Error(
+                rows.message || "Could not load applications."
+            );
         }
 
         applications = rows.map(row => ({
@@ -390,7 +408,7 @@ function displayApplications() {
             <td>${app.name}</td>
             <td>${app.email}</td>
             <td>${app.course}</td>
-            <td>${app.percentage || ""}${app.percentage ? "%" : ""}</td>
+            <td></td>
             <td>
                 <span class="status status-${app.status}">
                     ${app.status}
@@ -415,7 +433,8 @@ function displayApplications() {
         </tr>
     `).join("");
 
-    $("noData").style.display = list.length ? "none" : "block";
+    $("noData").style.display =
+        list.length ? "none" : "block";
 
     $("total").textContent = applications.length;
 
@@ -430,14 +449,13 @@ function displayApplications() {
 }
 
 
-// Update Application Status in MySQL
-
+// Update Application Status
 async function changeStatus(id, status) {
     const token = localStorage.getItem("token");
 
     try {
         const response = await fetch(
-            `http://localhost:5000/api/admissions/${id}/status`,
+            `${API_URL}/api/admissions/${id}/status`,
             {
                 method: "PATCH",
                 headers: {
@@ -451,7 +469,9 @@ async function changeStatus(id, status) {
         const result = await response.json();
 
         if (!response.ok) {
-            alert(result.message || "Failed to update status.");
+            alert(
+                result.message || "Failed to update status."
+            );
             return;
         }
 
@@ -459,10 +479,10 @@ async function changeStatus(id, status) {
 
     } catch (error) {
         console.error("Status update error:", error);
+
         alert("Cannot connect to the backend server.");
     }
 }
-
 
 
 // Admin Logout
@@ -471,9 +491,6 @@ function adminLogout() {
     localStorage.removeItem("user");
 
     $("adminArea").classList.add("hidden");
+
     window.scrollTo(0, 0);
 }
-
-
-// Initial Save
-save();
