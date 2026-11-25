@@ -27,7 +27,7 @@
             <a href="#courses">Courses</a>
             <a href="#contact">Contact</a>
 
-            <button type="button" onclick="openLogin('student')">
+            <button type="button" onclick="window.location.href='login.html'">
                 Student Login
             </button>
 
@@ -55,7 +55,7 @@
             </p>
 
             <button type="button" class="primary-btn"
-                onclick="openLogin('student')">
+                onclick="window.location.href='login.html'">
                 Apply Now
             </button>
 
@@ -322,175 +322,19 @@
 
         <div class="student-layout">
 
-            <!-- Admission Form -->
+            <!-- Apply Now Card -->
             <div class="form-card">
 
                 <div class="card-title">
-                    <span>APPLICATION</span>
-                    <h3>Admission Application Form</h3>
+                    <span>ADMISSIONS</span>
+                    <h3>Ready to Apply?</h3>
+                    <p>Start your admission application today.</p>
                 </div>
 
-                <form id="admissionForm">
-
-                    <div class="grid">
-
-                        <div>
-                            <label for="firstName">First Name *</label>
-                            <input type="text" id="firstName" required>
-                        </div>
-
-                        <div>
-                            <label for="lastName">Last Name *</label>
-                            <input type="text" id="lastName" required>
-                        </div>
-
-                        <div>
-                            <label for="dob">Date of Birth *</label>
-                            <input type="date" id="dob" required>
-                        </div>
-
-                        <div>
-                            <label for="gender">Gender *</label>
-
-                            <select id="gender" required>
-                                <option value="">Select Gender</option>
-                                <option>Male</option>
-                                <option>Female</option>
-                                <option>Other</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label for="studentEmail">Email *</label>
-                            <input type="email" id="studentEmail" readonly>
-                        </div>
-
-                        <div>
-                            <label for="phone">Phone *</label>
-
-                            <input
-                                type="tel"
-                                id="phone"
-                                placeholder="10-digit phone number"
-                                pattern="[0-9]{10}"
-                                maxlength="10"
-                                required
-                            >
-                        </div>
-
-                    </div>
-
-
-                    <label for="address">Address *</label>
-
-                    <textarea id="address" rows="3" required></textarea>
-
-
-                    <div class="grid">
-
-                        <div>
-                            <label for="qualification">
-                                Qualification *
-                            </label>
-
-                            <select id="qualification" required>
-                                <option value="">Select Qualification</option>
-                                <option>Intermediate / 12th</option>
-                                <option>Diploma</option>
-                                <option>Bachelor's Degree</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label for="percentage">Percentage *</label>
-
-                            <input
-                                type="number"
-                                id="percentage"
-                                min="0"
-                                max="100"
-                                step="0.01"
-                                required
-                            >
-                        </div>
-
-                        <div>
-                            <label for="passingYear">Passing Year *</label>
-
-                            <input
-                                type="number"
-                                id="passingYear"
-                                min="1990"
-                                max="2035"
-                                required
-                            >
-                        </div>
-
-                        <div>
-                            <label for="course">Course *</label>
-
-                            <select id="course" required>
-                                <option value="">Select Course</option>
-                                <option>B.Tech Computer Science</option>
-                                <option>B.Tech Electronics</option>
-                                <option>B.Tech Mechanical</option>
-                                <option>B.Tech Civil</option>
-                                <option>BCA</option>
-                                <option>BBA</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label for="mode">Study Mode *</label>
-
-                            <select id="mode" required>
-                                <option value="">Select Mode</option>
-                                <option>Regular</option>
-                                <option>Online</option>
-                                <option>Hybrid</option>
-                            </select>
-                        </div>
-
-                    </div>
-
-
-                    <label for="photo">Student Photo</label>
-
-                    <input
-                        type="file"
-                        id="photo"
-                        accept="image/*"
-                    >
-
-
-                    <label for="certificate">
-                        Qualification Certificate
-                    </label>
-
-                    <input
-                        type="file"
-                        id="certificate"
-                        accept=".pdf,.jpg,.jpeg,.png"
-                    >
-
-
-                    <label class="checkbox">
-
-                        <input type="checkbox" id="agree" required>
-
-                        I confirm that the information
-                        provided is correct.
-
-                    </label>
-
-
-                    <button type="submit" class="primary-btn">
-                        Submit Application
-                    </button>
-
-                </form>
-
-                <p id="formMessage"></p>
+                <button type="button" class="primary-btn"
+                    onclick="window.location.href='application.html'">
+                    Apply Now
+                </button>
 
             </div>
 
@@ -499,44 +343,43 @@
             <div class="status-card">
 
                 <span>YOUR APPLICATION</span>
-
                 <h3>Application Summary</h3>
 
                 <div class="summary">
-
-                    <p>
-                        Application ID
-                        <b id="appId">-</b>
-                    </p>
-
-                    <p>
-                        Course
-                        <b id="appCourse">-</b>
-                    </p>
-
-                    <p>
-                        Study Mode
-                        <b id="appMode">-</b>
-                    </p>
-
-                    <p>
-                        Status
-                        <b id="appStatus">Not Applied</b>
-                    </p>
-
+                    <p>Application ID <b id="appId">-</b></p>
+                    <p>Course <b id="appCourse">-</b></p>
+                    <p>Study Mode <b id="appMode">-</b></p>
+                    <p>Status <b id="appStatus">Not Applied</b></p>
                 </div>
 
                 <div class="status-info">
-
                     <b>Admission Process</b>
-
                     <p>1. Application Submitted</p>
                     <p>2. Admin Review</p>
                     <p>3. Final Decision</p>
-
                 </div>
 
             </div>
+
+        </div>
+
+
+        <!-- Hidden compatibility fields used by script.js -->
+        <div class="hidden" aria-hidden="true">
+
+            <form id="admissionForm">
+
+                <input id="firstName">
+                <input id="lastName">
+                <input id="studentEmail">
+                <input id="phone">
+
+                <select id="course"></select>
+                <select id="mode"></select>
+
+            </form>
+
+            <p id="formMessage"></p>
 
         </div>
 

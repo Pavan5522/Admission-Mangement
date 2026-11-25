@@ -32,8 +32,8 @@ button {
 }
 
 .header {
-    height: 75px;
-    padding: 0 5%;
+    min-height: 90px;
+    padding: 10px 5%;
     background: white;
     display: flex;
     align-items: center;
@@ -47,35 +47,35 @@ button {
 .logo {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 14px;
     text-decoration: none;
     color: #173b7a;
 }
 
 .logo-box {
-    width: 40px;
-    height: 40px;
+    width: 55px;
+    height: 55px;
     display: grid;
     place-items: center;
     background: #173b7a;
     color: white;
-    border-radius: 10px;
-    font-size: 21px;
+    border-radius: 12px;
+    font-size: 30px;
     font-weight: bold;
 }
 
-.logo b,
+.logo b {
+    display: block;
+    font-size: 28px;
+    font-weight: bold;
+    line-height: 1.2;
+}
+
 .logo small {
     display: block;
-}
-
-.logo b {
-    font-size: 21px;
-}
-
-.logo small {
-    font-size: 11px;
+    font-size: 14px;
     color: #3474c5;
+    letter-spacing: 1px;
 }
 
 .navbar {
@@ -780,5 +780,295 @@ footer {
         padding: 20px;
     }
 
+}
+
+
+
+
+
+/* =====================================
+   BUTTON HOVER EFFECTS
+===================================== */
+
+.navbar button,
+.logout-btn,
+.primary-btn {
+    transition: 0.3s ease;
+}
+
+.navbar button:hover,
+.primary-btn:hover {
+    background: #3474c5;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.navbar .admin-btn {
+    background: #ff6b35 !important;
+}
+
+.navbar .admin-btn:hover {
+    background: #e95725 !important;
+}
+
+
+/* =====================================
+   STUDENT LOGIN PAGE
+===================================== */
+
+.auth-page-body {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #edf4ff, #f5f7fb);
+}
+
+.auth-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 16px;
+}
+
+.auth-top {
+    width: 100%;
+    max-width: 460px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+}
+
+.auth-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #173b7a;
+    text-decoration: none;
+}
+
+.auth-brand-mark {
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    background: #173b7a;
+    color: white;
+    font-size: 23px;
+    font-weight: bold;
+}
+
+.auth-brand b,
+.auth-brand small {
+    display: block;
+}
+
+.auth-brand b {
+    font-size: 19px;
+}
+
+.auth-brand small {
+    color: #3474c5;
+    font-size: 11px;
+}
+
+.auth-back {
+    color: #173b7a;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.auth-back:hover {
+    color: #3474c5;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 460px;
+    padding: 32px;
+    background: white;
+    border-radius: 18px;
+    box-shadow: 0 12px 40px #173b7a18;
+}
+
+.auth-heading {
+    text-align: center;
+    margin-bottom: 22px;
+}
+
+.auth-heading .auth-icon {
+    font-size: 42px;
+}
+
+.auth-heading h1 {
+    color: #173b7a;
+    font-size: 25px;
+    margin: 5px 0;
+}
+
+.auth-heading p {
+    color: #6b7280;
+    font-size: 13px;
+}
+
+.auth-tabs {
+    display: flex;
+    gap: 6px;
+    padding: 5px;
+    margin-bottom: 20px;
+    background: #eef3f9;
+    border-radius: 9px;
+}
+
+.auth-tabs button {
+    width: 50%;
+    padding: 10px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: #475569;
+    font-weight: bold;
+}
+
+.auth-tabs button.active {
+    background: white;
+    color: #173b7a;
+    box-shadow: 0 2px 7px #173b7a12;
+}
+
+.auth-form {
+    display: grid;
+    gap: 9px;
+}
+
+.auth-form label {
+    color: #374151;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.auth-form input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccd4df;
+    border-radius: 8px;
+    outline: none;
+    margin-bottom: 5px;
+}
+
+.auth-form input:focus {
+    border-color: #3474c5;
+    box-shadow: 0 0 0 3px #3474c51a;
+}
+
+.auth-form .primary-btn {
+    width: 100%;
+    margin-top: 8px;
+}
+
+.auth-message {
+    min-height: 22px;
+    margin-top: 13px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.auth-note {
+    margin-top: 14px;
+    padding: 11px;
+    border-radius: 8px;
+    background: #f3f7ff;
+    color: #6b7280;
+    text-align: center;
+    font-size: 12px;
+}
+
+
+/* =====================================
+   MOBILE RESPONSIVENESS
+===================================== */
+
+@media (max-width: 650px) {
+
+    .header {
+        padding: 10px 4%;
+        gap: 10px;
+    }
+
+    .header .logo {
+        gap: 8px;
+    }
+
+    .header .logo-box {
+        width: 46px;
+        height: 46px;
+        font-size: 25px;
+    }
+
+    .header .logo b {
+        font-size: 22px;
+    }
+
+    .header .logo small {
+        font-size: 11px;
+    }
+
+    .navbar {
+        gap: 6px;
+    }
+
+    .navbar button {
+        padding: 8px 9px;
+        font-size: 11px;
+    }
+
+    .auth-card {
+        padding: 24px 20px;
+    }
+
+    .auth-top {
+        gap: 10px;
+    }
+
+    .auth-brand b {
+        font-size: 16px;
+    }
+
+    .auth-brand small {
+        font-size: 10px;
+    }
+}
+
+
+
+
+
+/* APPLICATION PAGE */
+
+.form-card {
+    max-width: 950px;
+    margin: auto;
+}
+
+.form-card form {
+    display: block;
+}
+
+.form-card form .grid {
+    margin-bottom: 12px;
+}
+
+.form-card form .primary-btn {
+    margin-top: 20px;
+    min-width: 200px;
+}
+
+#formMessage {
+    text-align: center;
+    margin-top: 15px;
+    font-weight: bold;
 }
 

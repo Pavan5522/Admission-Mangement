@@ -7,38 +7,53 @@ let applications = [];
 const $ = id => document.getElementById(id);
 
 
-// Login Modal
+// Scroll to dashboard
+function goToDashboard(id) {
+    const section = $(id);
+
+    if (section) {
+        section.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+    }
+}
+
+
+// Open Login
 function openLogin(type) {
-    $("loginModal").style.display = "grid";
-    $("loginModal").dataset.type = type;
+    if (type === "student") {
+        window.location.href = "login.html";
+        return;
+    }
+
+    const modal = $("loginModal");
+
+    if (!modal) return;
+
+    modal.dataset.type = "admin";
+
+    $("loginTitle").textContent = "Admin Login";
+    $("loginText").textContent =
+        "Login to manage student applications.";
+
+    $("loginIcon").textContent = "🔐";
+
+    $("tabs").classList.add("hidden");
+    $("registerForm").classList.add("hidden");
+    $("loginForm").classList.remove("hidden");
+
     $("loginMessage").textContent = "";
 
-    $("loginForm").classList.remove("hidden");
-    $("registerForm").classList.add("hidden");
-
-    if (type === "admin") {
-        $("loginTitle").textContent = "Admin Login";
-        $("loginText").textContent =
-            "Login to manage admission applications.";
-        $("loginIcon").textContent = "🛡️";
-        $("tabs").classList.add("hidden");
-        $("demo").textContent =
-            "Use your administrator account.";
-    } else {
-        $("loginTitle").textContent = "Student Login";
-        $("loginText").textContent =
-            "Login to manage your admission application.";
-        $("loginIcon").textContent = "👨‍🎓";
-        $("tabs").classList.remove("hidden");
-        $("demo").textContent =
-            "Register a new account or use your student account.";
-    }
+    modal.style.display = "grid";
 }
 
 
 // Close Login Modal
 function closeLogin() {
-    $("loginModal").style.display = "none";
+    if ($("loginModal")) {
+        $("loginModal").style.display = "none";
+    }
 }
 
 
@@ -46,6 +61,16 @@ function closeLogin() {
 function showLogin() {
     $("loginForm").classList.remove("hidden");
     $("registerForm").classList.add("hidden");
+
+    if ($("loginTab")) {
+        $("loginTab").classList.add("active");
+    }
+
+    if ($("registerTab")) {
+        $("registerTab").classList.remove("active");
+    }
+
+    $("loginMessage").textContent = "";
 }
 
 
@@ -53,148 +78,170 @@ function showLogin() {
 function showRegister() {
     $("loginForm").classList.add("hidden");
     $("registerForm").classList.remove("hidden");
+
+    if ($("loginTab")) {
+        $("loginTab").classList.remove("active");
+    }
+
+    if ($("registerTab")) {
+        $("registerTab").classList.add("active");
+    }
+
+    $("loginMessage").textContent = "";
 }
 
 
 // Login Form
-$("loginForm").onsubmit = async function(e) {
-    e.preventDefault();
+if ($("loginForm")) {
+    $("loginForm").onsubmit = async function(e) {
+        e.preventDefault();
 
-    const email = $("loginEmail").value.trim().toLowerCase();
-    const password = $("loginPassword").value;
-    const type = $("loginModal").dataset.type;
+        const email = $("loginEmail").value.trim().toLowerCase();
+        const password = $("loginPassword").value;
+        const type = $("loginModal").dataset.type;
 
-    try {
-        const response = await fetch(
-            `${API_URL}/api/auth/login`,
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    email,
-                    password
-                })
+        try {
+            const response = await fetch(
+                `${API_URL}/api/auth/login`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        email,
+                        password
+                    })
+                }
+            );
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                $("loginMessage").textContent =
+                    result.message || "Login failed.";
+                return;
             }
-        );
 
-        const result = await response.json();
+            if (!result.token || !result.user) {
+                $("loginMessage").textContent =
+                    "Invalid server response.";
+                return;
+            }
 
-        if (!response.ok) {
+            // Check user role
+            if (type === "admin" && result.user.role !== "admin") {
+                $("loginMessage").textContent =
+                    "Admin access only.";
+                return;
+            }
+
+            if (type === "student" && result.user.role !== "student") {
+                $("loginMessage").textContent =
+                    "Student access only.";
+                return;
+            }
+
+            // Save login details
+            localStorage.setItem("token", result.token);
+
+            localStorage.setItem(
+                "user",
+                JSON.stringify(result.user)
+            );
+
+            closeLogin();
+
+            if (result.user.role === "admin") {
+                await adminDashboard();
+            } else {
+                await studentDashboard();
+            }
+
+        } catch (error) {
+            console.error("Login error:", error);
+
             $("loginMessage").textContent =
-                result.message || "Login failed.";
-            return;
+                "Cannot connect to backend.";
         }
-
-        if (!result.token || !result.user) {
-            $("loginMessage").textContent =
-                "Invalid server response.";
-            return;
-        }
-
-        // Check user role
-        if (type === "admin" && result.user.role !== "admin") {
-            $("loginMessage").textContent =
-                "Admin access only.";
-            return;
-        }
-
-        if (type === "student" && result.user.role !== "student") {
-            $("loginMessage").textContent =
-                "Student access only.";
-            return;
-        }
-
-        // Save login details
-        localStorage.setItem("token", result.token);
-        localStorage.setItem(
-            "user",
-            JSON.stringify(result.user)
-        );
-
-        closeLogin();
-
-        if (result.user.role === "admin") {
-            await adminDashboard();
-        } else {
-            await studentDashboard();
-        }
-
-    } catch (error) {
-        console.error("Login error:", error);
-        $("loginMessage").textContent =
-            "Cannot connect to backend.";
-    }
-};
+    };
+}
 
 
 // Registration Form
-$("registerForm").onsubmit = async function(e) {
-    e.preventDefault();
+if ($("registerForm")) {
+    $("registerForm").onsubmit = async function(e) {
+        e.preventDefault();
 
-    const name = $("registerName").value.trim();
-    const email = $("registerEmail").value.trim().toLowerCase();
-    const password = $("registerPassword").value;
+        const name = $("registerName").value.trim();
+        const email = $("registerEmail").value.trim().toLowerCase();
+        const password = $("registerPassword").value;
 
-    if (!name || !email || !password) {
-        $("loginMessage").textContent =
-            "Please fill all required fields.";
-        return;
-    }
-
-    if (password.length < 8) {
-        $("loginMessage").textContent =
-            "Password must contain at least 8 characters.";
-        return;
-    }
-
-    try {
-        const response = await fetch(
-            `${API_URL}/api/auth/register`,
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    full_name: name,
-                    email: email,
-                    password: password
-                })
-            }
-        );
-
-        const result = await response.json();
-
-        if (!response.ok) {
+        if (!name || !email || !password) {
             $("loginMessage").textContent =
-                result.message || "Registration failed.";
+                "Please fill all required fields.";
             return;
         }
 
-        $("loginMessage").textContent =
-            "Registration successful! Please login.";
+        if (password.length < 8) {
+            $("loginMessage").textContent =
+                "Password must contain at least 8 characters.";
+            return;
+        }
 
-        $("registerForm").reset();
-        showLogin();
+        try {
+            const response = await fetch(
+                `${API_URL}/api/auth/register`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        full_name: name,
+                        email: email,
+                        password: password
+                    })
+                }
+            );
 
-    } catch (error) {
-        console.error("Registration error:", error);
+            const result = await response.json();
 
-        $("loginMessage").textContent =
-            "Cannot connect to backend.";
-    }
-};
+            if (!response.ok) {
+                $("loginMessage").textContent =
+                    result.message || "Registration failed.";
+                return;
+            }
+
+            $("registerForm").reset();
+
+            showLogin();
+
+            $("loginMessage").style.color = "green";
+
+            $("loginMessage").textContent =
+                "Registration successful! Please login.";
+
+        } catch (error) {
+            console.error("Registration error:", error);
+
+            $("loginMessage").textContent =
+                "Cannot connect to backend.";
+        }
+    };
+}
 
 
 // Student Dashboard
 async function studentDashboard() {
     const token = localStorage.getItem("token");
-    const user = JSON.parse(localStorage.getItem("user"));
+
+    const user = JSON.parse(
+        localStorage.getItem("user") || "null"
+    );
 
     if (!token || !user || user.role !== "student") {
-        openLogin("student");
+        window.location.href = "login.html";
         return;
     }
 
@@ -208,7 +255,13 @@ async function studentDashboard() {
         `Welcome, ${studentName}`;
 
     $("studentAccount").textContent = studentName;
-    $("studentEmail").value = user.email;
+
+    if ($("studentEmail")) {
+        $("studentEmail").value = user.email;
+    }
+
+    // Show dashboard
+    goToDashboard("studentArea");
 
     try {
         const response = await fetch(
@@ -235,6 +288,7 @@ async function studentDashboard() {
             $("appCourse").textContent = "-";
             $("appMode").textContent = "-";
             $("appStatus").textContent = "Not Applied";
+
             return;
         }
 
@@ -244,6 +298,7 @@ async function studentDashboard() {
         $("appId").textContent = row.id;
         $("appCourse").textContent = row.course;
         $("appMode").textContent = row.study_mode;
+
         $("appStatus").textContent =
             row.application_status;
 
@@ -253,71 +308,11 @@ async function studentDashboard() {
         $("studentStatus").textContent =
             "Unable to load status";
 
-        $("formMessage").textContent = error.message;
+        if ($("formMessage")) {
+            $("formMessage").textContent = error.message;
+        }
     }
 }
-
-
-// Submit Admission Form
-$("admissionForm").onsubmit = async function(e) {
-    e.preventDefault();
-
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-        $("formMessage").textContent =
-            "Please login first.";
-        return;
-    }
-
-    const fullName =
-        $("firstName").value.trim() + " " +
-        $("lastName").value.trim();
-
-    const course = $("course").value;
-    const mode = $("mode").value;
-
-    try {
-        const response = await fetch(
-            `${API_URL}/api/admissions`,
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    full_name: fullName,
-                    phone: $("phone").value,
-                    course,
-                    study_mode: mode
-                })
-            }
-        );
-
-        const result = await response.json();
-
-        if (!response.ok) {
-            $("formMessage").textContent =
-                result.message ||
-                "Application submission failed.";
-            return;
-        }
-
-        $("formMessage").textContent =
-            "Application submitted successfully!";
-
-        $("admissionForm").reset();
-
-        await studentDashboard();
-
-    } catch (error) {
-        console.error("Submission error:", error);
-
-        $("formMessage").textContent =
-            "Cannot connect to the backend.";
-    }
-};
 
 
 // Student Logout
@@ -327,14 +322,17 @@ function studentLogout() {
 
     $("studentArea").classList.add("hidden");
 
-    window.scrollTo(0, 0);
+    window.location.href = "index.html";
 }
 
 
 // Admin Dashboard
 async function adminDashboard() {
     const token = localStorage.getItem("token");
-    const user = JSON.parse(localStorage.getItem("user"));
+
+    const user = JSON.parse(
+        localStorage.getItem("user") || "null"
+    );
 
     if (!token || !user || user.role !== "admin") {
         openLogin("admin");
@@ -343,6 +341,9 @@ async function adminDashboard() {
 
     $("adminArea").classList.remove("hidden");
     $("studentArea").classList.add("hidden");
+
+    // Show dashboard
+    goToDashboard("adminArea");
 
     try {
         const response = await fetch(
@@ -384,6 +385,22 @@ async function adminDashboard() {
 }
 
 
+// Escape HTML before displaying database values
+function escapeHTML(value) {
+    return String(value ?? "").replace(/[&<>"']/g, character => {
+        const characters = {
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#039;"
+        };
+
+        return characters[character];
+    });
+}
+
+
 // Display Applications
 function displayApplications() {
     const search = $("search").value.trim().toLowerCase();
@@ -404,29 +421,31 @@ function displayApplications() {
 
     $("applicationList").innerHTML = list.map(app => `
         <tr>
-            <td>${app.id}</td>
-            <td>${app.name}</td>
-            <td>${app.email}</td>
-            <td>${app.course}</td>
-            <td></td>
+            <td>${escapeHTML(app.id)}</td>
+            <td>${escapeHTML(app.name)}</td>
+            <td>${escapeHTML(app.email)}</td>
+            <td>${escapeHTML(app.course)}</td>
+            <td>-</td>
+
             <td>
-                <span class="status status-${app.status}">
-                    ${app.status}
+                <span class="status">
+                    ${escapeHTML(app.status)}
                 </span>
             </td>
+
             <td>
                 <button class="action-btn approve"
-                    onclick="changeStatus('${app.id}','Approved')">
+                    onclick="changeStatus('${escapeHTML(app.id)}','Approved')">
                     Approve
                 </button>
 
                 <button class="action-btn reject"
-                    onclick="changeStatus('${app.id}','Rejected')">
+                    onclick="changeStatus('${escapeHTML(app.id)}','Rejected')">
                     Reject
                 </button>
 
                 <button class="action-btn pending-btn"
-                    onclick="changeStatus('${app.id}','Pending')">
+                    onclick="changeStatus('${escapeHTML(app.id)}','Pending')">
                     Pending
                 </button>
             </td>
@@ -492,5 +511,23 @@ function adminLogout() {
 
     $("adminArea").classList.add("hidden");
 
-    window.scrollTo(0, 0);
+    window.location.href = "index.html";
 }
+
+
+// Open the correct dashboard after login
+window.addEventListener("DOMContentLoaded", () => {
+
+    const params = new URLSearchParams(window.location.search);
+
+    const dashboard = params.get("dashboard");
+
+    if (dashboard === "student") {
+        studentDashboard();
+    }
+
+    if (dashboard === "admin") {
+        adminDashboard();
+    }
+
+});
