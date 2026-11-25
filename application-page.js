@@ -114,6 +114,12 @@ $("admissionForm").addEventListener("submit", async function(event) {
         $("studentEmail").value = user.email;
 
 
+        // Automatically redirect to Student Dashboard
+setTimeout(() => {
+    window.location.href = "index.html?dashboard=student";
+}, 2000);
+
+
     } catch (error) {
 
         console.error("Application submission error:", error);
