@@ -1,6 +1,8 @@
 
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
+
 require("dotenv").config();
 
 const db = require("./config/db");
@@ -14,18 +16,30 @@ const authorizeRoles = require("./middleware/roleMiddleware");
 
 const app = express();
 
+
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+
+// Serve uploaded photos and certificates
+app.use(
+    "/uploads",
+    express.static(path.join(__dirname, "uploads"))
+);
+
 
 // Home Route
 app.get("/", (req, res) => {
     res.send("Nexora University Backend is Running!");
 });
 
+
 // Test Database Connection
 app.get("/api/test-db", (req, res) => {
+
     db.query("SELECT 1", (err) => {
+
         if (err) {
             return res.status(500).json({
                 message: "Database query failed",
@@ -36,13 +50,17 @@ app.get("/api/test-db", (req, res) => {
         res.json({
             message: "TiDB Cloud connection is working!"
         });
+
     });
+
 });
+
 
 // Application Routes
 app.use("/api/admissions", admissionRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
+
 
 // Student Profile Route
 app.get(
@@ -50,12 +68,15 @@ app.get(
     verifyToken,
     authorizeRoles("student"),
     (req, res) => {
+
         res.json({
             message: "Student access granted!",
             user: req.user
         });
+
     }
 );
+
 
 // Start Server
 const PORT = process.env.PORT || 5000;

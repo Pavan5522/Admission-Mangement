@@ -1,66 +1,183 @@
 
 const db = require("../config/db");
+const fs = require("fs");
+const path = require("path");
 
+
+// Delete uploaded files if submission fails
+const deleteUploadedFiles = (files) => {
+    if (!files) return;
+
+    Object.values(files).flat().forEach(file => {
+        fs.unlink(file.path, (err) => {
+            if (err) {
+                console.error("File cleanup error:", err.message);
+            }
+        });
+    });
+};
+
+
+// Create Admission
 const createAdmission = (req, res) => {
+
     const {
         full_name,
         phone,
+        date_of_birth,
+        gender,
+        address,
+        qualification,
+        percentage,
+        passing_year,
         course,
         study_mode
-    } = req.body;
+    } = req.body || {};
 
     const email = req.user.email;
 
-    if (!full_name || !email || !course) {
+    const photo = req.files?.photo?.[0];
+    const certificate = req.files?.certificate?.[0];
+
+
+    // Validate form fields
+    if (
+        !full_name ||
+        !phone ||
+        !date_of_birth ||
+        !gender ||
+        !address ||
+        !qualification ||
+        percentage === undefined ||
+        percentage === "" ||
+        !passing_year ||
+        !course ||
+        !study_mode
+    ) {
+        deleteUploadedFiles(req.files);
+
         return res.status(400).json({
             message: "Please fill in all required fields."
         });
     }
 
+
+    // Validate documents
+    if (!photo || !certificate) {
+        deleteUploadedFiles(req.files);
+
+        return res.status(400).json({
+            message: "Please upload your student photo and educational certificate."
+        });
+    }
+
+
+    // Save file paths
+    const photoPath = `/uploads/${photo.filename}`;
+    const certificatePath = `/uploads/${certificate.filename}`;
+
+
+    // Insert application into TiDB
     const sql = `
         INSERT INTO admissions
-        (full_name, email, phone, course, study_mode)
-        VALUES (?, ?, ?, ?, ?)
+        (
+            full_name,
+            email,
+            phone,
+            date_of_birth,
+            gender,
+            address,
+            qualification,
+            percentage,
+            passing_year,
+            course,
+            study_mode,
+            photo_path,
+            certificate_path
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
-    db.query(sql, [full_name, email, phone, course, study_mode],
-        (err, result) => {
-            if (err) {
-                console.log(err.message);
-                return res.status(500).json({
-                    message: "Failed to submit application."
-                });
-            }
 
-            res.status(201).json({
-                message: "Application submitted successfully!",
-                applicationId: result.insertId
+    const values = [
+        full_name,
+        email,
+        phone,
+        date_of_birth,
+        gender,
+        address,
+        qualification,
+        percentage,
+        passing_year,
+        course,
+        study_mode,
+        photoPath,
+        certificatePath
+    ];
+
+
+    db.query(sql, values, (err, result) => {
+
+        if (err) {
+            console.error("Admission database error:", err);
+
+            deleteUploadedFiles(req.files);
+
+            return res.status(500).json({
+                message: "Failed to save admission application."
             });
         }
-    );
+
+
+        return res.status(201).json({
+            message: "Application submitted successfully!",
+            applicationId: result.insertId,
+            photo: photoPath,
+            certificate: certificatePath
+        });
+
+    });
+
 };
 
 
+// Get All Admissions
 const getAllAdmissions = (req, res) => {
-    const sql = "SELECT * FROM admissions ORDER BY id DESC";
+
+    const sql = `
+        SELECT *
+        FROM admissions
+        ORDER BY id DESC
+    `;
 
     db.query(sql, (err, results) => {
+
         if (err) {
+            console.error("Fetch admissions error:", err);
+
             return res.status(500).json({
                 message: "Failed to fetch applications."
             });
         }
 
         res.json(results);
+
     });
+
 };
 
 
+// Update Application Status
 const updateAdmissionStatus = (req, res) => {
+
     const { status } = req.body;
     const { id } = req.params;
 
-    const allowedStatuses = ["Pending", "Approved", "Rejected"];
+    const allowedStatuses = [
+        "Pending",
+        "Approved",
+        "Rejected"
+    ];
 
     if (!allowedStatuses.includes(status)) {
         return res.status(400).json({
@@ -68,11 +185,18 @@ const updateAdmissionStatus = (req, res) => {
         });
     }
 
-    const sql =
-        "UPDATE admissions SET application_status = ? WHERE id = ?";
+
+    const sql = `
+        UPDATE admissions
+        SET application_status = ?
+        WHERE id = ?
+    `;
 
     db.query(sql, [status, id], (err, result) => {
+
         if (err) {
+            console.error("Update status error:", err);
+
             return res.status(500).json({
                 message: "Failed to update status."
             });
@@ -87,12 +211,15 @@ const updateAdmissionStatus = (req, res) => {
         res.json({
             message: "Application status updated successfully!"
         });
+
     });
+
 };
 
 
-
+// Get Student's Latest Admission
 const getStudentLatestAdmission = (req, res) => {
+
     const email = req.user.email;
 
     const sql = `
@@ -104,7 +231,10 @@ const getStudentLatestAdmission = (req, res) => {
     `;
 
     db.query(sql, [email], (err, results) => {
+
         if (err) {
+            console.error("Student admission fetch error:", err);
+
             return res.status(500).json({
                 message: "Failed to fetch student application."
             });
@@ -115,7 +245,9 @@ const getStudentLatestAdmission = (req, res) => {
         }
 
         res.json(results[0]);
+
     });
+
 };
 
 
